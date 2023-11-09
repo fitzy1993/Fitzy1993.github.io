@@ -1,0 +1,75 @@
+<!-- This is where the browser starts reading and you want to tell the browser to read HTML-->
+<!doctype html>
+<html lang="en">
+<!-- The head or <head></head> contains a bunch of information that the browser should know BEFORE it looks at your content  -->
+<!-- This could include meta data, like the <title> which shows up in your browser tab, or <style> sheets for your HTML elements-->
+<!-- The head is also where you put stuff like facebook data -->
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<title>BasicHTML_01</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<meta name="author" content="Your name here!" />
+	<meta name="geo.country" content="US" />
+	<meta name="dc.language" content="en" />
+	<meta name="description" content="" />
+	<meta name="keywords" content="" />
+
+
+	<style type="text/css" media="screen">
+		/* CSS, which stands for cascading style sheets, are styles you set for your HTML components */
+		/* Everything has a default style  (think ugly) and here is how you */
+
+		/* class selection*/
+		.wrap{
+			width:700px;
+
+		}
+
+		/* Id selection */
+		#content-content{
+		}
+
+		/* Tag selection */
+		div{
+		}
+
+		div.wrap{
+		}
+
+		.wrap p{
+			font-family: Arial, sans-serif;
+			color: #000000;
+			font-size: 14px;
+			line-height: 1.2em;
+		}
+
+		h1{
+			font-family: Arial, sans-serif;
+			color: red;
+			font-size: 20px;
+		}
+	</style>
+
+	<!-- This line links to the style sheet in your css folder, you can now modify the style sheet independently from your content and apply the style in the style sheet to multiple html pages. -->
+	<link rel="stylesheet" href="css/styles.css" type="text/css" media="screen" charset="utf-8" />
+
+
+</head>
+<body>
+<!-- The body contains various pieces of content, which are placed into tags. like all tags they start with an opening tag and a closing tag, for example <div> Content goes here </div>. They are like boxes-->
+
+<!-- A div is like a container or box for your content -->
+	<div id="content-wrapper" class="wrap" >
+		<!-- An <h1> tag is a headline -->
+		<h1>Project: BasicHTML_01</h1>
+		<!-- A <p> tag represents a paragraph -->
+		<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+	</div>
+
+
+
+</body>
+</html>
