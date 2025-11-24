@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Guest List Manager</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Setup Phase -->
+        <div id="setup-screen" class="screen active">
+            <div class="card">
+                <h1>💑 Wedding Guest List Manager</h1>
+                <p class="subtitle">Let's set up your budget first</p>
+
+                <div class="question-container">
+                    <label>Partner 1 Name</label>
+                    <input type="text" id="partner1-name" placeholder="Enter name" class="text-input">
+                </div>
+
+                <div class="question-container">
+                    <label>Partner 2 Name</label>
+                    <input type="text" id="partner2-name" placeholder="Enter name" class="text-input">
+                </div>
+
+                <div class="question-container">
+                    <label>Cost Per Guest ($)</label>
+                    <input type="number" id="cost-per-guest" placeholder="150" class="text-input" min="1">
+                </div>
+
+                <div class="question-container">
+                    <label>Floor Budget (Minimum # of guests)</label>
+                    <input type="number" id="floor-budget" placeholder="50" class="text-input" min="1">
+                </div>
+
+                <div class="question-container">
+                    <label>Middle Zone (Ideal # of guests)</label>
+                    <input type="number" id="middle-budget" placeholder="100" class="text-input" min="1">
+                </div>
+
+                <div class="question-container">
+                    <label>Absolute Max (Hard ceiling # of guests)</label>
+                    <input type="number" id="max-budget" placeholder="150" class="text-input" min="1">
+                </div>
+
+                <button class="big-button" id="start-button">Let's Start! 🎉</button>
+            </div>
+        </div>
+
+        <!-- Partner Selection -->
+        <div id="partner-select-screen" class="screen">
+            <div class="card">
+                <h1>Who's adding guests?</h1>
+                <p class="subtitle">Select your name to start adding guests independently</p>
+                <button class="big-button partner-button" id="select-partner1"></button>
+                <button class="big-button partner-button" id="select-partner2"></button>
+                <button class="secondary-button" id="view-progress">View Progress</button>
+            </div>
+        </div>
+
+        <!-- Stage 1: Brain Dump -->
+        <div id="braindump-screen" class="screen">
+            <div class="card">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <p class="partner-label" id="current-partner"></p>
+
+                <!-- Question: Name -->
+                <div class="question-step active" id="step-name">
+                    <h2>Who's someone you'd want at your wedding?</h2>
+                    <input type="text" id="guest-name" placeholder="Enter their name" class="text-input" autocomplete="off">
+                    <button class="big-button" id="name-next">Next ➡️</button>
+                </div>
+
+                <!-- Question: Relationship -->
+                <div class="question-step" id="step-relationship">
+                    <h2 id="relationship-question"></h2>
+                    <button class="big-button choice-button" data-value="friend">Friend</button>
+                    <button class="big-button choice-button" data-value="family">Family</button>
+                    <button class="big-button choice-button" data-value="coworker">Coworker</button>
+                    <button class="big-button choice-button" data-value="extended-family">Extended Family</button>
+                    <button class="big-button choice-button" data-value="parents-friend">Parent's Friend</button>
+                </div>
+
+                <!-- Question: Age Range -->
+                <div class="question-step" id="step-age">
+                    <h2 id="age-question"></h2>
+                    <button class="big-button choice-button" data-value="20s-30s">20s - 30s</button>
+                    <button class="big-button choice-button" data-value="30s-40s">30s - 40s</button>
+                    <button class="big-button choice-button" data-value="40s-50s">40s - 50s</button>
+                    <button class="big-button choice-button" data-value="50+">50+</button>
+                </div>
+
+                <!-- Question: Note -->
+                <div class="question-step" id="step-note">
+                    <h2 id="note-question"></h2>
+                    <textarea id="guest-note" placeholder="Add a note (optional)" class="text-input"></textarea>
+                    <button class="big-button" id="note-next">Next ➡️</button>
+                    <button class="secondary-button" id="note-skip">Skip</button>
+                </div>
+
+                <!-- Question: Add More -->
+                <div class="question-step" id="step-addmore">
+                    <h2>✅ Added!</h2>
+                    <p class="guest-summary" id="guest-summary"></p>
+                    <button class="big-button" id="add-another">Add Another Guest</button>
+                    <button class="secondary-button" id="done-adding">I'm Done</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress View -->
+        <div id="progress-screen" class="screen">
+            <div class="card">
+                <h1>Progress Update</h1>
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <div class="stat-number" id="partner1-count">0</div>
+                        <div class="stat-label" id="partner1-label"></div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="partner2-count">0</div>
+                        <div class="stat-label" id="partner2-label"></div>
+                    </div>
+                </div>
+                <p class="subtitle">Both partners need to finish adding guests before moving to the next stage.</p>
+                <button class="big-button" id="back-to-partner-select">Back</button>
+                <button class="big-button" id="continue-to-duplicates" style="display:none;">Find Duplicates 🔍</button>
+            </div>
+        </div>
+
+        <!-- Stage 2: Duplicate Detection -->
+        <div id="duplicate-screen" class="screen">
+            <div class="card">
+                <h1>🔍 Duplicate Detection</h1>
+                <p class="subtitle">We found some potential duplicates. Are these the same person?</p>
+
+                <div id="duplicate-container"></div>
+
+                <div id="no-duplicates" style="display:none;">
+                    <p>✅ No duplicates found! Moving to rating stage...</p>
+                </div>
+
+                <button class="big-button" id="finish-duplicates" style="display:none;">Continue to Rating</button>
+            </div>
+        </div>
+
+        <!-- Stage 3: Rating -->
+        <div id="rating-screen" class="screen">
+            <div class="card">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="rating-progress-fill"></div>
+                </div>
+                <p class="partner-label" id="rating-partner"></p>
+                <p class="rating-counter" id="rating-counter"></p>
+
+                <!-- Question: Should Invite -->
+                <div class="rating-step active" id="rating-step-invite">
+                    <h2 id="rating-guest-name"></h2>
+                    <p class="guest-detail" id="rating-guest-detail"></p>
+                    <p class="rating-question">Should they be invited?</p>
+                    <button class="big-button choice-button" data-value="yes">✅ Yes</button>
+                    <button class="big-button choice-button" data-value="maybe">🤔 Maybe</button>
+                    <button class="big-button choice-button" data-value="no">❌ No</button>
+                </div>
+
+                <!-- Question: Will Attend -->
+                <div class="rating-step" id="rating-step-attend">
+                    <h2 id="rating-guest-name2"></h2>
+                    <p class="rating-question">Will they actually come?</p>
+                    <button class="big-button choice-button" data-value="definitely">Definitely (95%)</button>
+                    <button class="big-button choice-button" data-value="probably">Probably (75%)</button>
+                    <button class="big-button choice-button" data-value="maybe">Maybe (50%)</button>
+                    <button class="big-button choice-button" data-value="unlikely">Unlikely (25%)</button>
+                </div>
+
+                <!-- Question: Champion -->
+                <div class="rating-step" id="rating-step-champion">
+                    <h2 id="rating-guest-name3"></h2>
+                    <p class="rating-question">Who really wants them there?</p>
+                    <button class="big-button choice-button" data-value="me">You</button>
+                    <button class="big-button choice-button" data-value="partner">Your Partner</button>
+                    <button class="big-button choice-button" data-value="both">Both of Us</button>
+                    <button class="big-button choice-button" data-value="your-parents">Your Parents</button>
+                    <button class="big-button choice-button" data-value="partner-parents">Partner's Parents</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Selection -->
+        <div id="rating-select-screen" class="screen">
+            <div class="card">
+                <h1>Time to Rate!</h1>
+                <p class="subtitle">Each partner needs to rate all guests independently. You won't see each other's ratings until you're both done.</p>
+                <button class="big-button partner-button" id="rating-select-partner1"></button>
+                <button class="big-button partner-button" id="rating-select-partner2"></button>
+                <button class="secondary-button" id="rating-view-progress">View Rating Progress</button>
+            </div>
+        </div>
+
+        <!-- Rating Progress View -->
+        <div id="rating-progress-screen" class="screen">
+            <div class="card">
+                <h1>Rating Progress</h1>
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <div class="stat-number" id="rating-partner1-count">0</div>
+                        <div class="stat-label" id="rating-partner1-label"></div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="rating-partner2-count">0</div>
+                        <div class="stat-label" id="rating-partner2-label"></div>
+                    </div>
+                </div>
+                <p class="subtitle">Both partners need to finish rating before the reveal.</p>
+                <button class="big-button" id="back-to-rating-select">Back</button>
+                <button class="big-button" id="continue-to-reveal" style="display:none;">See The Reveal! 🎭</button>
+            </div>
+        </div>
+
+        <!-- Stage 4: The Reveal -->
+        <div id="reveal-screen" class="screen">
+            <div class="card wide">
+                <h1>🎭 The Reveal</h1>
+                <p class="subtitle">Here's how your ratings compare!</p>
+
+                <div class="bucket">
+                    <h2>✅ Both Said Yes</h2>
+                    <div class="guest-grid" id="bucket-yes"></div>
+                </div>
+
+                <div class="bucket">
+                    <h2>⚠️ Need to Discuss</h2>
+                    <p class="bucket-subtitle">One said yes, the other said maybe or no</p>
+                    <div class="guest-grid" id="bucket-conflict"></div>
+                </div>
+
+                <div class="bucket">
+                    <h2>❌ Both Said No</h2>
+                    <div class="guest-grid" id="bucket-no"></div>
+                </div>
+
+                <button class="big-button" id="view-dashboard">View Dashboard 📊</button>
+            </div>
+        </div>
+
+        <!-- Stage 5: Dashboard -->
+        <div id="dashboard-screen" class="screen">
+            <div class="card wide">
+                <h1>📊 Dashboard</h1>
+
+                <div class="budget-summary">
+                    <h3>Budget Overview</h3>
+                    <div class="budget-bars">
+                        <div class="budget-bar">
+                            <div class="budget-label">Current List</div>
+                            <div class="budget-value" id="current-guests">0</div>
+                        </div>
+                        <div class="budget-bar">
+                            <div class="budget-label">Expected Attendance</div>
+                            <div class="budget-value" id="expected-attendance">0</div>
+                        </div>
+                        <div class="budget-bar">
+                            <div class="budget-label">Floor</div>
+                            <div class="budget-value" id="floor-value">0</div>
+                        </div>
+                        <div class="budget-bar">
+                            <div class="budget-label">Middle Zone</div>
+                            <div class="budget-value" id="middle-value">0</div>
+                        </div>
+                        <div class="budget-bar">
+                            <div class="budget-label">Max</div>
+                            <div class="budget-value" id="max-value">0</div>
+                        </div>
+                    </div>
+                    <div class="cost-display">
+                        <strong>Estimated Cost:</strong> <span id="estimated-cost">$0</span>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>Relationship Categories</h3>
+                        <canvas id="relationship-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Age Distribution</h3>
+                        <canvas id="age-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Who's Championing</h3>
+                        <canvas id="champion-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Attendance Probability</h3>
+                        <canvas id="attendance-chart"></canvas>
+                    </div>
+                </div>
+
+                <button class="secondary-button" id="back-to-reveal">Back to Reveal</button>
+                <button class="secondary-button" id="start-over">Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fuzzy-match.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
