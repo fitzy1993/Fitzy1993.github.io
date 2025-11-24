@@ -7,6 +7,7 @@ const App = {
     currentRatingIndex: 0,
     guestsToRate: [],
     duplicatePairs: [],
+    setupData: {},
 
     // Initialize app
     init() {
@@ -19,15 +20,71 @@ const App = {
         // Navigate to appropriate screen
         if (!this.setup) {
             this.showScreen('setup');
+            this.initSetupFlow();
         } else {
             this.restoreState();
         }
     },
 
+    // Initialize setup flow
+    initSetupFlow() {
+        // Partner 1 name
+        document.getElementById('setup-partner1-next').addEventListener('click', () => this.setupSavePartner1Name());
+        document.getElementById('partner1-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.setupSavePartner1Name();
+        });
+
+        // Partner 1 photo
+        document.getElementById('partner1-photo-input').addEventListener('change', (e) => this.handlePhotoUpload(e, 'partner1'));
+        document.getElementById('setup-partner1-photo-next').addEventListener('click', () => this.setupShowPartner2Choice());
+        document.getElementById('setup-partner1-photo-skip').addEventListener('click', () => this.setupShowPartner2Choice());
+
+        // Partner 2 choice
+        document.getElementById('setup-partner2-here').addEventListener('click', () => this.setupPartner2Here());
+        document.getElementById('setup-partner2-invite').addEventListener('click', () => this.setupShowInviteCode());
+
+        // Partner 2 name
+        document.getElementById('setup-partner2-next').addEventListener('click', () => this.setupSavePartner2Name());
+        document.getElementById('partner2-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.setupSavePartner2Name();
+        });
+
+        // Partner 2 photo
+        document.getElementById('partner2-photo-input').addEventListener('change', (e) => this.handlePhotoUpload(e, 'partner2'));
+        document.getElementById('setup-partner2-photo-next').addEventListener('click', () => this.setupShowCost());
+        document.getElementById('setup-partner2-photo-skip').addEventListener('click', () => this.setupShowCost());
+
+        // Invite code
+        document.getElementById('setup-invite-continue').addEventListener('click', () => this.setupShowCost());
+
+        // Cost per guest
+        document.getElementById('setup-cost-next').addEventListener('click', () => this.setupSaveCost());
+        document.getElementById('cost-per-guest').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.setupSaveCost();
+        });
+
+        // Floor budget
+        document.getElementById('setup-floor-next').addEventListener('click', () => this.setupSaveFloor());
+        document.getElementById('floor-budget').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.setupSaveFloor();
+        });
+
+        // Middle budget
+        document.getElementById('setup-middle-next').addEventListener('click', () => this.setupSaveMiddle());
+        document.getElementById('middle-budget').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.setupSaveMiddle();
+        });
+
+        // Max budget
+        document.getElementById('setup-max-next').addEventListener('click', () => this.setupSaveMax());
+        document.getElementById('max-budget').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.setupSaveMax();
+        });
+    },
+
     // Setup all event listeners
     setupEventListeners() {
-        // Setup Phase
-        document.getElementById('start-button').addEventListener('click', () => this.completeSetup());
+        // Setup Phase handled in initSetupFlow()
 
         // Partner Selection
         document.getElementById('select-partner1').addEventListener('click', () => this.startBrainDump('partner1'));
@@ -126,33 +183,147 @@ const App = {
         }
     },
 
+    // Setup flow functions
+    setupShowStep(stepId) {
+        const setupScreen = document.getElementById('setup-screen');
+        setupScreen.querySelectorAll('.question-step').forEach(s => s.classList.remove('active'));
+        document.getElementById(stepId).classList.add('active');
+    },
+
+    setupSavePartner1Name() {
+        const name = document.getElementById('partner1-name').value.trim();
+        if (!name) {
+            alert('Please enter your name');
+            return;
+        }
+        this.setupData.partner1 = name;
+        document.getElementById('partner1-photo-question').textContent = `Upload your photo, ${name}`;
+        this.setupShowStep('setup-step-partner1-photo');
+    },
+
+    setupShowPartner2Choice() {
+        this.setupShowStep('setup-step-partner2-choice');
+    },
+
+    setupPartner2Here() {
+        this.setupShowStep('setup-step-partner2');
+    },
+
+    setupShowInviteCode() {
+        // Generate a simple invite code
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        this.setupData.inviteCode = code;
+
+        const url = `${window.location.origin}${window.location.pathname}?invite=${code}`;
+        document.getElementById('invite-code-display').innerHTML = `
+            <div style="margin-bottom: 10px;"><strong>Code:</strong> ${code}</div>
+            <div style="font-size: 0.8em; word-break: break-all;">${url}</div>
+        `;
+
+        // For now, auto-fill partner 2 as "Partner"
+        this.setupData.partner2 = 'Partner';
+
+        this.setupShowStep('setup-step-invite');
+    },
+
+    setupSavePartner2Name() {
+        const name = document.getElementById('partner2-name').value.trim();
+        if (!name) {
+            alert('Please enter their name');
+            return;
+        }
+        this.setupData.partner2 = name;
+        document.getElementById('partner2-photo-question').textContent = `Upload ${name}'s photo`;
+        this.setupShowStep('setup-step-partner2-photo');
+    },
+
+    setupShowCost() {
+        this.setupShowStep('setup-step-cost');
+        document.getElementById('cost-per-guest').focus();
+    },
+
+    setupSaveCost() {
+        const cost = parseInt(document.getElementById('cost-per-guest').value);
+        if (!cost || cost < 1) {
+            alert('Please enter a valid cost per guest');
+            return;
+        }
+        this.setupData.costPerGuest = cost;
+        this.setupShowStep('setup-step-floor');
+        document.getElementById('floor-budget').focus();
+    },
+
+    setupSaveFloor() {
+        const floor = parseInt(document.getElementById('floor-budget').value);
+        if (!floor || floor < 1) {
+            alert('Please enter a valid minimum number');
+            return;
+        }
+        this.setupData.floor = floor;
+        this.setupShowStep('setup-step-middle');
+        document.getElementById('middle-budget').focus();
+    },
+
+    setupSaveMiddle() {
+        const middle = parseInt(document.getElementById('middle-budget').value);
+        if (!middle || middle < 1) {
+            alert('Please enter a valid ideal number');
+            return;
+        }
+        if (middle < this.setupData.floor) {
+            alert('Ideal should be more than minimum!');
+            return;
+        }
+        this.setupData.middle = middle;
+        this.setupShowStep('setup-step-max');
+        document.getElementById('max-budget').focus();
+    },
+
+    setupSaveMax() {
+        const max = parseInt(document.getElementById('max-budget').value);
+        if (!max || max < 1) {
+            alert('Please enter a valid maximum number');
+            return;
+        }
+        if (max < this.setupData.middle) {
+            alert('Maximum should be more than ideal!');
+            return;
+        }
+        this.setupData.max = max;
+        this.completeSetup();
+    },
+
+    handlePhotoUpload(event, partner) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById(`${partner}-photo-preview`).src = e.target.result;
+                this.setupData[`${partner}Photo`] = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    },
+
     // Complete setup phase
     completeSetup() {
-        const partner1 = document.getElementById('partner1-name').value.trim();
-        const partner2 = document.getElementById('partner2-name').value.trim();
-        const costPerGuest = parseInt(document.getElementById('cost-per-guest').value);
-        const floor = parseInt(document.getElementById('floor-budget').value);
-        const middle = parseInt(document.getElementById('middle-budget').value);
-        const max = parseInt(document.getElementById('max-budget').value);
-
-        if (!partner1 || !partner2 || !costPerGuest || !floor || !middle || !max) {
-            alert('Please fill in all fields');
-            return;
-        }
-
-        if (floor > middle || middle > max) {
-            alert('Budget targets should be: Floor < Middle < Max');
-            return;
-        }
-
-        this.setup = { partner1, partner2, costPerGuest, floor, middle, max };
+        this.setup = {
+            partner1: this.setupData.partner1,
+            partner2: this.setupData.partner2,
+            partner1Photo: this.setupData.partner1Photo,
+            partner2Photo: this.setupData.partner2Photo,
+            costPerGuest: this.setupData.costPerGuest,
+            floor: this.setupData.floor,
+            middle: this.setupData.middle,
+            max: this.setupData.max
+        };
         Storage.saveSetup(this.setup);
 
         // Set partner names in buttons
-        document.getElementById('select-partner1').textContent = partner1;
-        document.getElementById('select-partner2').textContent = partner2;
-        document.getElementById('rating-select-partner1').textContent = partner1;
-        document.getElementById('rating-select-partner2').textContent = partner2;
+        document.getElementById('select-partner1').textContent = this.setup.partner1;
+        document.getElementById('select-partner2').textContent = this.setup.partner2;
+        document.getElementById('rating-select-partner1').textContent = this.setup.partner1;
+        document.getElementById('rating-select-partner2').textContent = this.setup.partner2;
 
         this.showScreen('partner-select');
     },

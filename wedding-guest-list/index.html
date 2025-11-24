@@ -12,40 +12,101 @@
         <!-- Setup Phase -->
         <div id="setup-screen" class="screen active">
             <div class="card">
-                <h1>💑 Wedding Guest List Manager</h1>
-                <p class="subtitle">Let's set up your budget first</p>
+                <h1>💕 Wedding Guest List Manager</h1>
+                <p class="subtitle">Let's create your dream guest list together</p>
 
-                <div class="question-container">
-                    <label>Partner 1 Name</label>
-                    <input type="text" id="partner1-name" placeholder="Enter name" class="text-input">
+                <!-- Step: Partner 1 Name -->
+                <div class="question-step active" id="setup-step-partner1">
+                    <h2>What's your name?</h2>
+                    <input type="text" id="partner1-name" placeholder="Enter your name" class="text-input" autocomplete="off">
+                    <button class="big-button" id="setup-partner1-next">Next ➡️</button>
                 </div>
 
-                <div class="question-container">
-                    <label>Partner 2 Name</label>
-                    <input type="text" id="partner2-name" placeholder="Enter name" class="text-input">
+                <!-- Step: Partner 1 Photo -->
+                <div class="question-step" id="setup-step-partner1-photo">
+                    <h2 id="partner1-photo-question">Upload your photo</h2>
+                    <div class="photo-upload-container">
+                        <img id="partner1-photo-preview" class="photo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect fill='%23ffb7c5' width='120' height='120'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='white'%3E👤%3C/text%3E%3C/svg%3E" alt="Partner 1 photo">
+                        <br>
+                        <label for="partner1-photo-input" class="upload-button">Choose Photo 📸</label>
+                        <input type="file" id="partner1-photo-input" accept="image/*" style="display:none;">
+                    </div>
+                    <button class="big-button" id="setup-partner1-photo-next">Next ➡️</button>
+                    <button class="secondary-button" id="setup-partner1-photo-skip">Skip for Now</button>
                 </div>
 
-                <div class="question-container">
-                    <label>Cost Per Guest ($)</label>
-                    <input type="number" id="cost-per-guest" placeholder="150" class="text-input" min="1">
+                <!-- Step: Partner 2 Name or Invite -->
+                <div class="question-step" id="setup-step-partner2-choice">
+                    <h2>Is your partner here with you?</h2>
+                    <button class="big-button choice-button" id="setup-partner2-here">Yes, they're here! 💑</button>
+                    <button class="big-button choice-button" id="setup-partner2-invite">No, invite them later 📲</button>
                 </div>
 
-                <div class="question-container">
-                    <label>Floor Budget (Minimum # of guests)</label>
+                <!-- Step: Partner 2 Name -->
+                <div class="question-step" id="setup-step-partner2">
+                    <h2>What's your partner's name?</h2>
+                    <input type="text" id="partner2-name" placeholder="Enter their name" class="text-input" autocomplete="off">
+                    <button class="big-button" id="setup-partner2-next">Next ➡️</button>
+                </div>
+
+                <!-- Step: Partner 2 Photo -->
+                <div class="question-step" id="setup-step-partner2-photo">
+                    <h2 id="partner2-photo-question">Upload their photo</h2>
+                    <div class="photo-upload-container">
+                        <img id="partner2-photo-preview" class="photo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect fill='%23ffb7c5' width='120' height='120'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='white'%3E👤%3C/text%3E%3C/svg%3E" alt="Partner 2 photo">
+                        <br>
+                        <label for="partner2-photo-input" class="upload-button">Choose Photo 📸</label>
+                        <input type="file" id="partner2-photo-input" accept="image/*" style="display:none;">
+                    </div>
+                    <button class="big-button" id="setup-partner2-photo-next">Next ➡️</button>
+                    <button class="secondary-button" id="setup-partner2-photo-skip">Skip for Now</button>
+                </div>
+
+                <!-- Step: Invite Code Display -->
+                <div class="question-step" id="setup-step-invite">
+                    <h2>📲 Send this code to your partner</h2>
+                    <p class="subtitle">They can use it to join your wedding planning!</p>
+                    <div class="invite-code" id="invite-code-display">LOADING...</div>
+                    <p style="text-align: center; color: var(--gray); font-size: 0.9em;">
+                        Share this code or URL with your partner
+                    </p>
+                    <button class="big-button" id="setup-invite-continue">Continue Solo for Now</button>
+                </div>
+
+                <!-- Step: Cost Per Guest -->
+                <div class="question-step" id="setup-step-cost">
+                    <h2>What's the cost per guest?</h2>
+                    <p class="subtitle">This helps calculate your total budget</p>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 15px; top: 15px; font-size: 1.2em; color: var(--gray);">$</span>
+                        <input type="number" id="cost-per-guest" placeholder="150" class="text-input" min="1" style="padding-left: 35px;">
+                    </div>
+                    <button class="big-button" id="setup-cost-next">Next ➡️</button>
+                </div>
+
+                <!-- Step: Floor Budget -->
+                <div class="question-step" id="setup-step-floor">
+                    <h2>Minimum number of guests?</h2>
+                    <p class="subtitle">The smallest guest list you'd be comfortable with</p>
                     <input type="number" id="floor-budget" placeholder="50" class="text-input" min="1">
+                    <button class="big-button" id="setup-floor-next">Next ➡️</button>
                 </div>
 
-                <div class="question-container">
-                    <label>Middle Zone (Ideal # of guests)</label>
+                <!-- Step: Middle Budget -->
+                <div class="question-step" id="setup-step-middle">
+                    <h2>Ideal number of guests?</h2>
+                    <p class="subtitle">Your target sweet spot</p>
                     <input type="number" id="middle-budget" placeholder="100" class="text-input" min="1">
+                    <button class="big-button" id="setup-middle-next">Next ➡️</button>
                 </div>
 
-                <div class="question-container">
-                    <label>Absolute Max (Hard ceiling # of guests)</label>
+                <!-- Step: Max Budget -->
+                <div class="question-step" id="setup-step-max">
+                    <h2>Maximum number of guests?</h2>
+                    <p class="subtitle">The absolute hard ceiling</p>
                     <input type="number" id="max-budget" placeholder="150" class="text-input" min="1">
+                    <button class="big-button" id="setup-max-next">All Done! 🎉</button>
                 </div>
-
-                <button class="big-button" id="start-button">Let's Start! 🎉</button>
             </div>
         </div>
 
