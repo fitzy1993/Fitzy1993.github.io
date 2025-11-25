@@ -567,6 +567,11 @@ h2 {
     color: #c0392b;
 }
 
+.badge-not-evaluated {
+    background-color: #e0e0e0;
+    color: #666;
+}
+
 .couple-badge {
     padding: 6px 15px;
     border-radius: 20px;
@@ -606,6 +611,22 @@ h2 {
 
 .guest-card-actions {
     margin-top: 10px;
+}
+
+.evaluate-btn {
+    background-color: #5a4a78;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
+    transition: all 0.3s;
+    margin-right: 10px;
+}
+
+.evaluate-btn:hover {
+    background-color: #4a3a68;
 }
 
 .delete-btn {

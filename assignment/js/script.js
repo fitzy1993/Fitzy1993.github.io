@@ -16,6 +16,77 @@ $(document).ready(function() {
         });
     });
 
+    // Bulk add button (from intro)
+    $('#bulk-add-btn').click(function() {
+        $('#intro').fadeOut(300, function() {
+            $('#bulk-add-section').fadeIn(300);
+        });
+    });
+
+    // Bulk add button (from guest list)
+    $('#bulk-add-from-list').click(function() {
+        $('#guest-list').fadeOut(300, function() {
+            $('#bulk-add-section').fadeIn(300);
+        });
+    });
+
+    // Bulk add submit
+    $('#bulk-add-submit').click(function() {
+        const bulkInput = $('#bulk-names-input').val().trim();
+        if (bulkInput === '') {
+            alert('Please enter at least one name');
+            return;
+        }
+
+        // Split by newlines and filter out empty lines
+        const names = bulkInput.split('\n')
+            .map(name => name.trim())
+            .filter(name => name !== '');
+
+        if (names.length === 0) {
+            alert('Please enter at least one name');
+            return;
+        }
+
+        // Add each name to the guest list
+        let addedCount = 0;
+        names.forEach(function(name) {
+            // Check if name already exists
+            const exists = guestList.find(g => g.name.toLowerCase() === name.toLowerCase());
+            if (!exists) {
+                guestList.push({
+                    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                    name: name,
+                    timestamp: new Date().toISOString(),
+                    recommendation: 'not-evaluated',
+                    needsEvaluation: true
+                });
+                addedCount++;
+            }
+        });
+
+        localStorage.setItem('weddingGuestList', JSON.stringify(guestList));
+
+        // Clear the textarea
+        $('#bulk-names-input').val('');
+
+        // Show success message and go to guest list
+        alert(addedCount + ' guest' + (addedCount !== 1 ? 's' : '') + ' added to your list!');
+
+        displayGuestList();
+        $('#bulk-add-section').fadeOut(300, function() {
+            $('#guest-list').fadeIn(300);
+        });
+    });
+
+    // Bulk add cancel
+    $('#bulk-add-cancel').click(function() {
+        $('#bulk-names-input').val('');
+        $('#bulk-add-section').fadeOut(300, function() {
+            $('#intro').fadeIn(300);
+        });
+    });
+
     // Handle person name input
     $('#person-name').on('input', function() {
         const name = $(this).val().trim();
@@ -469,6 +540,10 @@ $(document).ready(function() {
                         badgeClass = 'badge-strong-no';
                         badgeText = 'No';
                         break;
+                    case 'not-evaluated':
+                        badgeClass = 'badge-not-evaluated';
+                        badgeText = 'Not Evaluated';
+                        break;
                 }
 
                 listHTML += '<div class="guest-card">';
@@ -508,6 +583,9 @@ $(document).ready(function() {
                 }
 
                 listHTML += '<div class="guest-card-actions">';
+                if (person.needsEvaluation) {
+                    listHTML += '<button class="evaluate-btn" data-name="' + person.name + '">Evaluate</button>';
+                }
                 listHTML += '<button class="delete-btn" data-index="' + index + '">Remove</button>';
                 listHTML += '</div>';
                 listHTML += '</div>';
@@ -554,6 +632,29 @@ $(document).ready(function() {
 
             // Store reference to the partner
             window.evaluatingPlusOneFor = partnerName;
+        });
+    });
+
+    // Evaluate button (for bulk-added guests)
+    $(document).on('click', '.evaluate-btn', function() {
+        const guestName = $(this).data('name');
+
+        // Find the guest and remove the bulk-added entry
+        const guestIndex = guestList.findIndex(g => g.name === guestName);
+        if (guestIndex !== -1) {
+            // Remove the unevaluated entry - will be re-added after evaluation
+            guestList.splice(guestIndex, 1);
+            localStorage.setItem('weddingGuestList', JSON.stringify(guestList));
+        }
+
+        // Start evaluation for this person
+        resetQuestionnaire();
+        $('#guest-list').fadeOut(300, function() {
+            $('#questionnaire').fadeIn(300);
+            $('#person-input-section').fadeIn(300);
+            $('#person-name').val(guestName);
+            // Trigger the input event to show plus-one question
+            $('#person-name').trigger('input');
         });
     });
 });

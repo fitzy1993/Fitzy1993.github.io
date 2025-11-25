@@ -26,6 +26,19 @@
 
 				<div class="button-container" style="text-align: center;">
 					<div class="button" id="start">Start Evaluating Your Guest List</div>
+					<div class="button secondary" id="bulk-add-btn">Bulk Add Names</div>
+				</div>
+			</div>
+
+			<div class="content" id="bulk-add-section" style="display: none;">
+				<h2>Bulk Add Guests</h2>
+				<p style="text-align: center; margin-bottom: 20px;">Enter names below (one per line) to quickly add multiple people to your list. You can evaluate them individually later.</p>
+
+				<textarea id="bulk-names-input" placeholder="John Smith&#10;Jane Doe&#10;Sarah Johnson&#10;..." style="width: 100%; height: 200px; padding: 15px; font-size: 16px; border: 2px solid #ddd; border-radius: 4px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; resize: vertical;"></textarea>
+
+				<div class="button-container">
+					<div class="button" id="bulk-add-submit">Add All to List</div>
+					<div class="button secondary" id="bulk-add-cancel">Cancel</div>
 				</div>
 			</div>
 
@@ -159,6 +172,7 @@
 				<div id="list-container"></div>
 				<div class="button-container">
 					<div class="button" id="add-more">Evaluate More People</div>
+					<div class="button secondary" id="bulk-add-from-list">Bulk Add Names</div>
 				</div>
 			</div>
 		</div>
