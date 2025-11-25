@@ -16,6 +16,33 @@ $(document).ready(function() {
         });
     });
 
+    // Handle person name input
+    $('#person-name').on('input', function() {
+        const name = $(this).val().trim();
+        if (name !== '') {
+            $('#input-person-name').text(name);
+            $('#plusone-question').slideDown(300);
+            $('#begin-questions').hide();
+        } else {
+            $('#plusone-question').slideUp(300);
+            $('#plusone-details').hide();
+            $('#begin-questions').show();
+        }
+    });
+
+    // Handle plus-one answer
+    $(document).on('click', '.plusone-answer', function() {
+        const answer = $(this).data('answer');
+
+        if (answer === 'yes') {
+            populateExistingGuests();
+            $('#plusone-details').slideDown(300);
+        } else {
+            $('#plusone-details').slideUp(300);
+            $('#begin-questions').fadeIn(300);
+        }
+    });
+
     // Begin questions button
     $('#begin-questions').click(function() {
         const name = $('#person-name').val().trim();
@@ -43,6 +70,30 @@ $(document).ready(function() {
             window.evaluatingPlusOneFor = null;
         }
 
+        // Process plus-one data from input section
+        if (window.tempPlusOneLink) {
+            if (window.tempPlusOneLink.type === 'existing') {
+                // Find the selected guest
+                const selectedGuest = guestList.find(function(guest) {
+                    return (guest.id || guestList.indexOf(guest)).toString() === window.tempPlusOneLink.guestId;
+                });
+
+                if (selectedGuest) {
+                    answers.plusOne = selectedGuest.name;
+                    answers.plusOneId = selectedGuest.id || guestList.indexOf(selectedGuest);
+                    answers.linkedTo = selectedGuest.name;
+                    // Mark for linking after save
+                    answers.linkToExisting = selectedGuest;
+                }
+            } else if (window.tempPlusOneLink.type === 'new') {
+                answers.plusOne = window.tempPlusOneLink.name;
+                answers.plusOneNeedsEvaluation = true;
+            }
+
+            // Clear temp data
+            window.tempPlusOneLink = null;
+        }
+
         currentQuestion = 1;
 
         // Update all person name placeholders
@@ -55,8 +106,8 @@ $(document).ready(function() {
         });
     });
 
-    // Answer button clicks
-    $(document).on('click', '.answer-button', function() {
+    // Answer button clicks (for relationship questions only)
+    $(document).on('click', '.answer-button:not(.plusone-answer)', function() {
         const answer = $(this).data('answer');
         const questionId = $(this).closest('.question-container').attr('id');
 
@@ -71,19 +122,9 @@ $(document).ready(function() {
             nextQuestion = 6; // Skip q5
         }
 
-        // Skip the "who is plus-one" question if they said no to plus-one
-        if (questionId === 'q8' && answer === 'no') {
-            nextQuestion = 10; // Skip q9, go to results
-        }
-
-        // Populate existing guests dropdown when reaching q9
-        if (questionId === 'q8' && answer === 'yes') {
-            populateExistingGuests();
-        }
-
         // Hide current question
         $('#' + questionId).fadeOut(300, function() {
-            if (nextQuestion <= 9) {
+            if (nextQuestion <= 7) {
                 currentQuestion = nextQuestion;
                 showQuestion(currentQuestion);
             } else {
@@ -278,6 +319,16 @@ $(document).ready(function() {
             delete answers.autoLinkTo; // Clean up temporary property
         }
 
+        // Handle linking to existing guest from input section
+        if (answers.linkToExisting) {
+            const partner = guestList.find(g => g.id === answers.linkToExisting.id);
+            if (partner) {
+                partner.linkedTo = currentPerson;
+                partner.plusOneId = answers.id;
+            }
+            delete answers.linkToExisting; // Clean up temporary property
+        }
+
         localStorage.setItem('weddingGuestList', JSON.stringify(guestList));
     }
 
@@ -331,26 +382,14 @@ $(document).ready(function() {
             return;
         }
 
-        // Find the selected guest
-        const selectedGuest = guestList.find(function(guest) {
-            return (guest.id || guestList.indexOf(guest)).toString() === selectedGuestId;
-        });
+        // Store for later when we create the answers object
+        window.tempPlusOneLink = {
+            type: 'existing',
+            guestId: selectedGuestId
+        };
 
-        if (selectedGuest) {
-            answers.plusOne = selectedGuest.name;
-            answers.plusOneId = selectedGuest.id || guestList.indexOf(selectedGuest);
-            answers.linkedTo = selectedGuest.name;
-
-            // Update the linked guest to point back
-            selectedGuest.linkedTo = currentPerson;
-            selectedGuest.plusOneId = answers.id;
-            localStorage.setItem('weddingGuestList', JSON.stringify(guestList));
-
-            // Go to results
-            $('#q9').fadeOut(300, function() {
-                showResults();
-            });
-        }
+        $('#plusone-details').slideUp(300);
+        $('#begin-questions').fadeIn(300);
     });
 
     $('#add-new-plusone').click(function() {
@@ -360,26 +399,32 @@ $(document).ready(function() {
             return;
         }
 
-        answers.plusOne = plusOneName;
-        answers.plusOneNeedsEvaluation = true;
+        // Store for later when we create the answers object
+        window.tempPlusOneLink = {
+            type: 'new',
+            name: plusOneName
+        };
 
-        // Go to results
-        $('#q9').fadeOut(300, function() {
-            showResults();
-        });
+        $('#plusone-details').slideUp(300);
+        $('#begin-questions').fadeIn(300);
     });
 
     $('#skip-plusone').click(function() {
-        // Go to results without plus-one info
-        $('#q9').fadeOut(300, function() {
-            showResults();
-        });
+        // Clear any temp data
+        window.tempPlusOneLink = null;
+
+        $('#plusone-details').slideUp(300);
+        $('#begin-questions').fadeIn(300);
     });
 
     function resetQuestionnaire() {
         $('#person-name').val('');
         $('#plusone-name').val('');
         $('#existing-guest-select').val('');
+        $('#plusone-question').hide();
+        $('#plusone-details').hide();
+        $('#begin-questions').show();
+        window.tempPlusOneLink = null;
         currentQuestion = 0;
         answers = {};
         $('.question-container').hide();

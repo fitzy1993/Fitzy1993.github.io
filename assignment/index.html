@@ -33,7 +33,38 @@
 				<div id="person-input-section">
 					<h2>Who are you considering inviting?</h2>
 					<input type="text" id="person-name" placeholder="Enter their name">
-					<div class="button" id="begin-questions">Begin Questions</div>
+
+					<div id="plusone-question" style="margin-top: 30px; display: none;">
+						<h3 style="text-align: center; font-size: 1.2em; margin-bottom: 15px;">Does <span id="input-person-name"></span> get a plus-one?</h3>
+						<div class="answer-buttons" style="margin-bottom: 20px;">
+							<div class="answer-button plusone-answer" data-answer="yes">Yes</div>
+							<div class="answer-button plusone-answer" data-answer="no">No</div>
+						</div>
+
+						<div id="plusone-details" style="display: none;">
+							<p style="text-align: center; margin-bottom: 15px; font-size: 1.1em;">Who is their plus-one?</p>
+							<p class="sub-question">You can link them to someone already on your list or enter a new name</p>
+
+							<div id="existing-guests-section" style="margin: 20px 0;">
+								<p style="text-align: center; margin-bottom: 10px;">Link to existing guest:</p>
+								<select id="existing-guest-select" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 4px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;">
+									<option value="">-- Select an existing guest --</option>
+								</select>
+								<div class="button" id="link-existing" style="margin-top: 15px;">Link and Continue</div>
+							</div>
+
+							<div style="text-align: center; margin: 20px 0; color: #999;">OR</div>
+
+							<div id="new-plusone-section">
+								<input type="text" id="plusone-name" placeholder="Enter their partner's name" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 4px; margin: 20px 0; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;">
+								<div class="button" id="add-new-plusone">Add and Continue</div>
+							</div>
+
+							<div class="button secondary" id="skip-plusone" style="margin-top: 20px;">Skip for now</div>
+						</div>
+					</div>
+
+					<div class="button" id="begin-questions" style="margin-top: 20px;">Begin Questions</div>
 				</div>
 
 				<div id="questions-section" style="display: none;">
@@ -108,36 +139,6 @@
 							<div class="answer-button" data-answer="unsure">I'm not sure</div>
 							<div class="answer-button" data-answer="probably-not">Probably not</div>
 						</div>
-					</div>
-
-					<div class="question-container" id="q8" style="display: none;">
-						<p class="question">Does <span class="person-name-placeholder"></span> get a plus-one?</p>
-						<div class="answer-buttons">
-							<div class="answer-button" data-answer="yes">Yes</div>
-							<div class="answer-button" data-answer="no">No</div>
-						</div>
-					</div>
-
-					<div class="question-container" id="q9" style="display: none;">
-						<p class="question">Who is their plus-one?</p>
-						<p class="sub-question">You can link them to someone already on your list or enter a new name</p>
-
-						<div id="existing-guests-section" style="margin: 20px 0;">
-							<p style="text-align: center; margin-bottom: 10px;">Link to existing guest:</p>
-							<select id="existing-guest-select" style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 4px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;">
-								<option value="">-- Select an existing guest --</option>
-							</select>
-							<div class="button" id="link-existing" style="margin-top: 15px;">Link to Selected Guest</div>
-						</div>
-
-						<div style="text-align: center; margin: 20px 0; color: #999;">OR</div>
-
-						<div id="new-plusone-section">
-							<input type="text" id="plusone-name" placeholder="Enter their partner's name" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 4px; margin: 20px 0; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;">
-							<div class="button" id="add-new-plusone">Add New Plus-One</div>
-						</div>
-
-						<div class="button secondary" id="skip-plusone" style="margin-top: 20px;">Skip for now</div>
 					</div>
 				</div>
 
