@@ -26,9 +26,23 @@ $(document).ready(function() {
 
         currentPerson = name;
         answers = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
             name: currentPerson,
             timestamp: new Date().toISOString()
         };
+
+        // Check if this person is being evaluated as a plus-one
+        if (window.evaluatingPlusOneFor) {
+            const partner = guestList.find(g => g.name === window.evaluatingPlusOneFor);
+            if (partner) {
+                answers.linkedTo = partner.name;
+                answers.plusOneId = partner.id;
+                // Mark that we'll link them after saving
+                answers.autoLinkTo = partner;
+            }
+            window.evaluatingPlusOneFor = null;
+        }
+
         currentQuestion = 1;
 
         // Update all person name placeholders
@@ -57,9 +71,19 @@ $(document).ready(function() {
             nextQuestion = 6; // Skip q5
         }
 
+        // Skip the "who is plus-one" question if they said no to plus-one
+        if (questionId === 'q8' && answer === 'no') {
+            nextQuestion = 10; // Skip q9, go to results
+        }
+
+        // Populate existing guests dropdown when reaching q9
+        if (questionId === 'q8' && answer === 'yes') {
+            populateExistingGuests();
+        }
+
         // Hide current question
         $('#' + questionId).fadeOut(300, function() {
-            if (nextQuestion <= 7) {
+            if (nextQuestion <= 9) {
                 currentQuestion = nextQuestion;
                 showQuestion(currentQuestion);
             } else {
@@ -241,6 +265,19 @@ $(document).ready(function() {
 
         // Save to guest list
         guestList.push(answers);
+
+        // Handle auto-linking if this person was evaluated as a plus-one
+        if (answers.autoLinkTo) {
+            const partner = guestList.find(g => g.id === answers.autoLinkTo.id);
+            if (partner) {
+                partner.linkedTo = currentPerson;
+                partner.plusOneId = answers.id;
+                delete partner.plusOneNeedsEvaluation;
+                delete partner.plusOne; // Remove the string reference
+            }
+            delete answers.autoLinkTo; // Clean up temporary property
+        }
+
         localStorage.setItem('weddingGuestList', JSON.stringify(guestList));
     }
 
@@ -269,8 +306,80 @@ $(document).ready(function() {
         });
     });
 
+    // Plus-one handling
+    function populateExistingGuests() {
+        const select = $('#existing-guest-select');
+        select.find('option:not(:first)').remove(); // Clear existing options except the first
+
+        // Get all guests without a linked partner and not the current person
+        const availableGuests = guestList.filter(function(guest) {
+            return !guest.linkedTo && !guest.plusOneId && guest.name !== currentPerson;
+        });
+
+        availableGuests.forEach(function(guest, index) {
+            select.append($('<option>', {
+                value: guest.id || index,
+                text: guest.name
+            }));
+        });
+    }
+
+    $('#link-existing').click(function() {
+        const selectedGuestId = $('#existing-guest-select').val();
+        if (!selectedGuestId) {
+            alert('Please select a guest to link');
+            return;
+        }
+
+        // Find the selected guest
+        const selectedGuest = guestList.find(function(guest) {
+            return (guest.id || guestList.indexOf(guest)).toString() === selectedGuestId;
+        });
+
+        if (selectedGuest) {
+            answers.plusOne = selectedGuest.name;
+            answers.plusOneId = selectedGuest.id || guestList.indexOf(selectedGuest);
+            answers.linkedTo = selectedGuest.name;
+
+            // Update the linked guest to point back
+            selectedGuest.linkedTo = currentPerson;
+            selectedGuest.plusOneId = answers.id;
+            localStorage.setItem('weddingGuestList', JSON.stringify(guestList));
+
+            // Go to results
+            $('#q9').fadeOut(300, function() {
+                showResults();
+            });
+        }
+    });
+
+    $('#add-new-plusone').click(function() {
+        const plusOneName = $('#plusone-name').val().trim();
+        if (plusOneName === '') {
+            alert('Please enter a name');
+            return;
+        }
+
+        answers.plusOne = plusOneName;
+        answers.plusOneNeedsEvaluation = true;
+
+        // Go to results
+        $('#q9').fadeOut(300, function() {
+            showResults();
+        });
+    });
+
+    $('#skip-plusone').click(function() {
+        // Go to results without plus-one info
+        $('#q9').fadeOut(300, function() {
+            showResults();
+        });
+    });
+
     function resetQuestionnaire() {
         $('#person-name').val('');
+        $('#plusone-name').val('');
+        $('#existing-guest-select').val('');
         currentQuestion = 0;
         answers = {};
         $('.question-container').hide();
@@ -286,7 +395,15 @@ $(document).ready(function() {
         } else {
             listHTML += '<div class="guest-cards">';
 
+            // Track which guests we've already displayed (to avoid showing couples twice)
+            const displayedGuests = new Set();
+
             guestList.forEach(function(person, index) {
+                // Skip if already displayed as part of a couple
+                if (displayedGuests.has(person.id)) {
+                    return;
+                }
+
                 let badgeClass = '';
                 let badgeText = '';
 
@@ -311,9 +428,40 @@ $(document).ready(function() {
 
                 listHTML += '<div class="guest-card">';
                 listHTML += '<div class="guest-card-header">';
-                listHTML += '<h3>' + person.name + '</h3>';
+
+                // Check if this person has a linked partner
+                if (person.linkedTo) {
+                    const partner = guestList.find(g => g.name === person.linkedTo);
+                    if (partner) {
+                        listHTML += '<h3>' + person.name + ' & ' + partner.name + '</h3>';
+                        listHTML += '<span class="couple-badge">Couple</span>';
+                        displayedGuests.add(person.id);
+                        displayedGuests.add(partner.id);
+                    } else {
+                        listHTML += '<h3>' + person.name + '</h3>';
+                    }
+                } else if (person.plusOne) {
+                    // Has a plus-one but not yet evaluated
+                    listHTML += '<h3>' + person.name;
+                    if (person.plusOneNeedsEvaluation) {
+                        listHTML += ' <span style="font-size: 0.8em; color: #999;">(+ ' + person.plusOne + ')</span>';
+                    }
+                    listHTML += '</h3>';
+                } else {
+                    listHTML += '<h3>' + person.name + '</h3>';
+                }
+
                 listHTML += '<span class="badge ' + badgeClass + '">' + badgeText + '</span>';
                 listHTML += '</div>';
+
+                // Show plus-one info if needed
+                if (person.plusOneNeedsEvaluation) {
+                    listHTML += '<div class="plusone-note">';
+                    listHTML += '<span style="color: #f39c12;">⚠</span> Plus-one (' + person.plusOne + ') needs evaluation';
+                    listHTML += ' <button class="evaluate-plusone-btn" data-name="' + person.plusOne + '" data-partner="' + person.name + '">Evaluate Now</button>';
+                    listHTML += '</div>';
+                }
+
                 listHTML += '<div class="guest-card-actions">';
                 listHTML += '<button class="delete-btn" data-index="' + index + '">Remove</button>';
                 listHTML += '</div>';
@@ -330,9 +478,37 @@ $(document).ready(function() {
     $(document).on('click', '.delete-btn', function() {
         const index = $(this).data('index');
         if (confirm('Remove this person from your evaluations?')) {
+            const personToRemove = guestList[index];
+
+            // If they have a linked partner, unlink them
+            if (personToRemove.linkedTo) {
+                const partner = guestList.find(g => g.name === personToRemove.linkedTo);
+                if (partner) {
+                    delete partner.linkedTo;
+                    delete partner.plusOneId;
+                }
+            }
+
             guestList.splice(index, 1);
             localStorage.setItem('weddingGuestList', JSON.stringify(guestList));
             displayGuestList();
         }
+    });
+
+    // Evaluate plus-one button
+    $(document).on('click', '.evaluate-plusone-btn', function() {
+        const plusOneName = $(this).data('name');
+        const partnerName = $(this).data('partner');
+
+        // Pre-fill the name and note that this is a plus-one
+        resetQuestionnaire();
+        $('#guest-list').fadeOut(300, function() {
+            $('#questionnaire').fadeIn(300);
+            $('#person-input-section').fadeIn(300);
+            $('#person-name').val(plusOneName);
+
+            // Store reference to the partner
+            window.evaluatingPlusOneFor = partnerName;
+        });
     });
 });
