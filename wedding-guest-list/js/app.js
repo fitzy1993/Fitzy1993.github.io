@@ -426,11 +426,31 @@ const App = {
             30: { emoji: '🎈', title: 'Thirty!', message: 'That\'s a lot of love!' },
             40: { emoji: '💝', title: 'Forty Guests!', message: 'Wow, this is getting exciting!' },
             50: { emoji: '👏', title: 'Half Century!', message: '50 guests! Incredible!' },
+            60: { emoji: '🎀', title: 'Sixty Guests!', message: 'Your celebration is going to be huge!' },
+            70: { emoji: '💐', title: 'Seventy!', message: 'So many people to celebrate with!' },
             75: { emoji: '🎆', title: 'Seventy-Five!', message: 'This is going to be epic!' },
+            80: { emoji: '🌺', title: 'Eighty Guests!', message: 'What an amazing turnout!' },
+            90: { emoji: '🎪', title: 'Ninety!', message: 'Almost to 100! You\'re unstoppable!' },
             100: { emoji: '🎇', title: 'ONE HUNDRED!', message: 'Century club! What an achievement!' }
         };
 
-        return messages[count];
+        // If we have a custom message, use it
+        if (messages[count]) {
+            return messages[count];
+        }
+
+        // Every 10 guests gets a celebration!
+        if (count % 10 === 0) {
+            const emojis = ['🎊', '🎉', '✨', '🌟', '💫', '🎈', '🎀', '💐', '🌺'];
+            const randomEmoji = emojis[Math.floor(count / 10) % emojis.length];
+            return {
+                emoji: randomEmoji,
+                title: `${count} Guests!`,
+                message: 'Amazing milestone! Keep it going!'
+            };
+        }
+
+        return null;
     },
 
     // Show milestone celebration
