@@ -395,6 +395,91 @@ const App = {
         this.updateProgress(75);
     },
 
+    // Create confetti effect
+    createConfetti() {
+        const colors = ['#ff9aa2', '#ffb7b2', '#ffc9de', '#ffd4e5', '#ffe0eb', '#b5ead7', '#c7ceea'];
+        const confettiCount = 50;
+
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+            confetti.style.animation = 'confetti-fall linear forwards';
+            document.body.appendChild(confetti);
+
+            setTimeout(() => confetti.remove(), 5000);
+        }
+    },
+
+    // Get celebratory message based on count
+    getCelebrationMessage(count) {
+        const messages = {
+            1: { emoji: '🎉', title: 'First Guest!', message: 'Your guest list is growing!' },
+            5: { emoji: '✨', title: 'Five Guests!', message: 'You\'re on a roll!' },
+            10: { emoji: '🌟', title: 'Double Digits!', message: 'Ten awesome guests!' },
+            15: { emoji: '💫', title: 'Fifteen!', message: 'This party is getting big!' },
+            20: { emoji: '🎊', title: 'Twenty Guests!', message: 'Your wedding is going to be amazing!' },
+            25: { emoji: '🥳', title: 'Quarter Century!', message: '25 guests! Keep going!' },
+            30: { emoji: '🎈', title: 'Thirty!', message: 'That\'s a lot of love!' },
+            40: { emoji: '💝', title: 'Forty Guests!', message: 'Wow, this is getting exciting!' },
+            50: { emoji: '👏', title: 'Half Century!', message: '50 guests! Incredible!' },
+            75: { emoji: '🎆', title: 'Seventy-Five!', message: 'This is going to be epic!' },
+            100: { emoji: '🎇', title: 'ONE HUNDRED!', message: 'Century club! What an achievement!' }
+        };
+
+        return messages[count];
+    },
+
+    // Show milestone celebration
+    showMilestoneCelebration(count) {
+        const milestone = this.getCelebrationMessage(count);
+        if (!milestone) return;
+
+        // Create celebration popup
+        const popup = document.createElement('div');
+        popup.className = 'celebration-popup';
+        popup.innerHTML = `
+            <div style="font-size: 4em; margin-bottom: 15px;">${milestone.emoji}</div>
+            <h2>${milestone.title}</h2>
+            <p>${milestone.message}</p>
+        `;
+        document.body.appendChild(popup);
+
+        // Extra confetti for milestones!
+        this.createConfetti();
+        setTimeout(() => this.createConfetti(), 200);
+
+        setTimeout(() => {
+            popup.style.animation = 'popup 0.3s ease-out reverse';
+            setTimeout(() => popup.remove(), 300);
+        }, 2500);
+    },
+
+    // Update guest count display
+    updateGuestCountDisplay() {
+        const guests = Storage.getGuests();
+        const myGuests = guests.filter(g => g.addedBy === this.currentPartner);
+        const count = myGuests.length;
+
+        const badge = document.getElementById('current-guest-count');
+        if (count === 1) {
+            badge.textContent = '1 guest added!';
+        } else {
+            badge.textContent = `${count} guests added!`;
+        }
+
+        // Trigger animation
+        badge.style.animation = 'none';
+        setTimeout(() => {
+            badge.style.animation = 'bounce 0.5s ease';
+        }, 10);
+
+        return count;
+    },
+
     // Save note
     saveNote(note) {
         if (note === undefined) {
@@ -405,6 +490,13 @@ const App = {
 
         // Save to storage
         const savedGuest = Storage.addGuest(this.currentGuest);
+
+        // Show celebration!
+        this.createConfetti();
+
+        // Update count and check for milestones
+        const count = this.updateGuestCountDisplay();
+        this.showMilestoneCelebration(count);
 
         // Show summary
         const summary = `
