@@ -661,3 +661,126 @@ textarea.text-input {
     margin-bottom: 8px;
     font-size: 0.9em;
 }
+
+/* Cut List Styles */
+.budget-alert {
+    background: #fff3e0;
+    border: 2px solid #ff9800;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.alert-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-size: 1.1em;
+}
+
+.alert-row.over {
+    border-top: 2px solid #ff9800;
+    margin-top: 10px;
+    padding-top: 15px;
+    color: #f44336;
+    font-weight: 700;
+    font-size: 1.3em;
+}
+
+.cut-item {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.cut-item.excluded {
+    background: #f5f5f5;
+    border-color: #bdbdbd;
+    opacity: 0.6;
+}
+
+.cut-item-info {
+    flex: 1;
+}
+
+.cut-item-name {
+    font-weight: 700;
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+
+.cut-item-details {
+    font-size: 0.9em;
+    color: var(--gray);
+    margin-bottom: 5px;
+}
+
+.cut-item-reason {
+    font-size: 0.85em;
+    color: #ff9800;
+    font-style: italic;
+}
+
+.cut-item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.cut-button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.cut-button.exclude {
+    background: #f44336;
+    color: white;
+}
+
+.cut-button.include {
+    background: #4caf50;
+    color: white;
+}
+
+.cut-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.priority-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.priority-must-have {
+    background: #ff9aa2;
+    color: white;
+}
+
+.priority-really-want {
+    background: #ffc9de;
+    color: #4a4a4a;
+}
+
+.priority-nice-to-have {
+    background: #ffe0eb;
+    color: #4a4a4a;
+}
+
+.priority-flexible {
+    background: #e0e0e0;
+    color: #4a4a4a;
+}

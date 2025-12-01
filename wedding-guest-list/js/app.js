@@ -138,6 +138,9 @@ const App = {
         document.querySelectorAll('#rating-step-champion .choice-button').forEach(btn => {
             btn.addEventListener('click', (e) => this.saveRatingChampion(e.target.dataset.value));
         });
+        document.querySelectorAll('#rating-step-priority .choice-button').forEach(btn => {
+            btn.addEventListener('click', (e) => this.saveRatingPriority(e.target.dataset.value));
+        });
 
         // Rating Progress
         document.getElementById('back-to-rating-select').addEventListener('click', () => this.showScreen('rating-select'));
@@ -145,6 +148,11 @@ const App = {
 
         // Reveal
         document.getElementById('view-dashboard').addEventListener('click', () => this.showDashboard());
+        document.getElementById('view-cut-list').addEventListener('click', () => this.showCutList());
+
+        // Cut List
+        document.getElementById('cutlist-to-dashboard').addEventListener('click', () => this.showDashboard());
+        document.getElementById('cutlist-back').addEventListener('click', () => this.showReveal());
 
         // Dashboard
         document.getElementById('back-to-reveal').addEventListener('click', () => this.showReveal());
@@ -819,6 +827,7 @@ const App = {
         document.getElementById('rating-guest-name').textContent = guest.name;
         document.getElementById('rating-guest-name2').textContent = guest.name;
         document.getElementById('rating-guest-name3').textContent = guest.name;
+        document.getElementById('rating-guest-name4').textContent = guest.name;
 
         document.getElementById('rating-guest-detail').textContent =
             `${this.formatLabel(guest.relationship)} • ${guest.age}`;
@@ -845,6 +854,13 @@ const App = {
     // Save rating: champion
     saveRatingChampion(value) {
         this.currentGuestRating.champion = value;
+        document.querySelectorAll('.rating-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('rating-step-priority').classList.add('active');
+    },
+
+    // Save rating: priority
+    saveRatingPriority(value) {
+        this.currentGuestRating.priority = value;
 
         // Save rating
         const guest = this.guestsToRate[this.currentRatingIndex];
@@ -918,6 +934,14 @@ const App = {
         this.renderBucket('bucket-conflict', bucketConflict);
         this.renderBucket('bucket-no', bucketNo);
 
+        // Show cut list button if over budget
+        const cutListBtn = document.getElementById('view-cut-list');
+        if (bucketYes.length > this.setup.max) {
+            cutListBtn.style.display = 'block';
+        } else {
+            cutListBtn.style.display = 'none';
+        }
+
         this.showScreen('reveal');
     },
 
@@ -979,8 +1003,9 @@ const App = {
         const guests = Storage.getGuests();
         const ratings = Storage.getRatings();
 
-        // Calculate metrics
+        // Calculate metrics (exclude guests marked as excluded)
         const invitedGuests = guests.filter(g => {
+            if (g.excluded) return false;
             const r = ratings[g.id];
             return r && r.partner1 && r.partner2 &&
                    (r.partner1.invite === 'yes' || r.partner2.invite === 'yes');
@@ -1153,6 +1178,144 @@ const App = {
                 }
             }
         });
+    },
+
+    // Show cut list
+    showCutList() {
+        const guests = Storage.getGuests();
+        const ratings = Storage.getRatings();
+
+        // Get all "yes" guests
+        const yesGuests = guests.filter(g => {
+            const r = ratings[g.id];
+            return r && r.partner1 && r.partner2 &&
+                   (r.partner1.invite === 'yes' || r.partner2.invite === 'yes');
+        });
+
+        // Calculate how many to cut
+        const needToCut = yesGuests.length - this.setup.max;
+
+        document.getElementById('cutlist-current').textContent = yesGuests.length;
+        document.getElementById('cutlist-max').textContent = this.setup.max;
+        document.getElementById('cutlist-need').textContent = needToCut;
+
+        // Score and sort guests by priority
+        const scoredGuests = yesGuests.map(guest => {
+            const r = ratings[guest.id];
+            let score = 0;
+            let reasons = [];
+
+            // Priority scoring (most important)
+            const priorities = {
+                'must-have': 100,
+                'really-want': 75,
+                'nice-to-have': 50,
+                'flexible': 25
+            };
+            const avgPriority = (priorities[r.partner1.priority || 'nice-to-have'] +
+                                priorities[r.partner2.priority || 'nice-to-have']) / 2;
+            score += avgPriority;
+
+            if (avgPriority < 50) {
+                reasons.push('Low priority from both partners');
+            }
+
+            // Invite scoring
+            if (r.partner1.invite === 'maybe' || r.partner2.invite === 'maybe') {
+                score -= 20;
+                reasons.push('One partner said "maybe"');
+            }
+            if (r.partner1.invite === 'no' || r.partner2.invite === 'no') {
+                score -= 30;
+                reasons.push('One partner said "no"');
+            }
+
+            // Attendance probability
+            const attendProb = this.getAttendanceProbability(r.partner1.attend, r.partner2.attend);
+            score += attendProb / 2;
+            if (attendProb < 50) {
+                reasons.push(`Low attendance probability (${attendProb}%)`);
+            }
+
+            // Champion scoring (parents' friends are easier to cut)
+            if (r.partner1.champion === 'your-parents' || r.partner1.champion === 'partner-parents' ||
+                r.partner2.champion === 'your-parents' || r.partner2.champion === 'partner-parents') {
+                score -= 10;
+                reasons.push("Parent's choice");
+            }
+
+            return {
+                guest,
+                rating: r,
+                score,
+                reasons,
+                excluded: guest.excluded || false
+            };
+        });
+
+        // Sort by score (lowest first = easiest to cut)
+        scoredGuests.sort((a, b) => a.score - b.score);
+
+        // Render suggestions
+        const container = document.getElementById('cut-suggestions');
+        container.innerHTML = '';
+
+        scoredGuests.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'cut-item' + (item.excluded ? ' excluded' : '');
+            div.id = `cut-item-${item.guest.id}`;
+
+            const priorityClass = `priority-${item.rating.partner1.priority || 'nice-to-have'}`;
+            const priorityLabel = this.formatLabel(item.rating.partner1.priority || 'nice-to-have');
+
+            div.innerHTML = `
+                <div class="cut-item-info">
+                    <div class="cut-item-name">
+                        ${index < needToCut ? '✂️' : '💡'} ${item.guest.name}
+                        <span class="priority-badge ${priorityClass}">${priorityLabel}</span>
+                    </div>
+                    <div class="cut-item-details">
+                        ${this.formatLabel(item.guest.relationship)} • ${item.guest.age}
+                        ${item.guest.note ? ` • ${item.guest.note}` : ''}
+                    </div>
+                    <div class="cut-item-reason">
+                        ${item.reasons.join(' • ')}
+                    </div>
+                </div>
+                <div class="cut-item-actions">
+                    ${item.excluded ?
+                        `<button class="cut-button include" onclick="App.toggleGuestExclusion('${item.guest.id}', false)">Keep</button>` :
+                        `<button class="cut-button exclude" onclick="App.toggleGuestExclusion('${item.guest.id}', true)">Cut</button>`
+                    }
+                </div>
+            `;
+
+            container.appendChild(div);
+        });
+
+        this.showScreen('cutlist');
+    },
+
+    // Toggle guest exclusion
+    toggleGuestExclusion(guestId, exclude) {
+        const guests = Storage.getGuests();
+        const guest = guests.find(g => g.id == guestId);
+        if (guest) {
+            guest.excluded = exclude;
+            Storage.saveGuests(guests);
+
+            // Update the UI
+            const item = document.getElementById(`cut-item-${guestId}`);
+            if (exclude) {
+                item.classList.add('excluded');
+                item.querySelector('.cut-item-actions').innerHTML =
+                    `<button class="cut-button include" onclick="App.toggleGuestExclusion('${guestId}', false)">Keep</button>`;
+            } else {
+                item.classList.remove('excluded');
+                item.querySelector('.cut-item-actions').innerHTML =
+                    `<button class="cut-button exclude" onclick="App.toggleGuestExclusion('${guestId}', true)">Cut</button>`;
+            }
+        }
     },
 
     // Start over

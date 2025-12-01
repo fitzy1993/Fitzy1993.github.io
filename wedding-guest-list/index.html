@@ -251,6 +251,16 @@
                     <button class="big-button choice-button" data-value="your-parents">Your Parents</button>
                     <button class="big-button choice-button" data-value="partner-parents">Partner's Parents</button>
                 </div>
+
+                <!-- Question: Priority -->
+                <div class="rating-step" id="rating-step-priority">
+                    <h2 id="rating-guest-name4"></h2>
+                    <p class="rating-question">How important is it that they're there?</p>
+                    <button class="big-button choice-button" data-value="must-have" style="background: linear-gradient(135deg, #ff9aa2 0%, #ffb7b2 100%);">❤️ Must Have</button>
+                    <button class="big-button choice-button" data-value="really-want" style="background: linear-gradient(135deg, #ffc9de 0%, #ffd4e5 100%);">💖 Really Want</button>
+                    <button class="big-button choice-button" data-value="nice-to-have" style="background: linear-gradient(135deg, #ffe0eb 0%, #fff0f3 100%); color: #4a4a4a;">💕 Nice to Have</button>
+                    <button class="big-button choice-button" data-value="flexible" style="background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); color: #4a4a4a;">🤍 Flexible</button>
+                </div>
             </div>
         </div>
 
@@ -308,6 +318,36 @@
                 </div>
 
                 <button class="big-button" id="view-dashboard">View Dashboard 📊</button>
+                <button class="secondary-button" id="view-cut-list" style="display:none;">✂️ Need to Cut Guests?</button>
+            </div>
+        </div>
+
+        <!-- Cut List Screen -->
+        <div id="cutlist-screen" class="screen">
+            <div class="card wide">
+                <h1>✂️ Cut List Helper</h1>
+                <p class="subtitle">You're over budget! Here are smart suggestions on who to cut.</p>
+
+                <div class="budget-alert">
+                    <div class="alert-row">
+                        <span>Current "Yes" list:</span>
+                        <strong id="cutlist-current">0</strong>
+                    </div>
+                    <div class="alert-row">
+                        <span>Your maximum:</span>
+                        <strong id="cutlist-max">0</strong>
+                    </div>
+                    <div class="alert-row over">
+                        <span>Need to cut:</span>
+                        <strong id="cutlist-need">0</strong>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">Suggested Cuts (lowest priority first):</h3>
+                <div id="cut-suggestions"></div>
+
+                <button class="big-button" id="cutlist-to-dashboard">View Updated Dashboard 📊</button>
+                <button class="secondary-button" id="cutlist-back">Back to Reveal</button>
             </div>
         </div>
 
