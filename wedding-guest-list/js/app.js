@@ -112,6 +112,16 @@ const App = {
         document.getElementById('note-next').addEventListener('click', () => this.saveNote());
         document.getElementById('note-skip').addEventListener('click', () => this.saveNote(''));
 
+        // Plus One
+        document.querySelectorAll('#step-plusone .choice-button').forEach(btn => {
+            btn.addEventListener('click', (e) => this.savePlusOne(e.target.dataset.value));
+        });
+        document.getElementById('plusone-name-next').addEventListener('click', () => this.savePlusOneName());
+        document.getElementById('plusone-name-skip').addEventListener('click', () => this.savePlusOneName(''));
+        document.getElementById('plusone-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.savePlusOneName();
+        });
+
         // Add more
         document.getElementById('add-another').addEventListener('click', () => this.resetGuestForm());
         document.getElementById('done-adding').addEventListener('click', () => this.finishBrainDump());
@@ -521,6 +531,49 @@ const App = {
 
         this.currentGuest.note = note;
 
+        // Go to plus-one question
+        const name = this.currentGuest.name;
+        document.getElementById('plusone-question').textContent = `Does ${name} get a plus-one?`;
+
+        document.querySelectorAll('.question-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step-plusone').classList.add('active');
+        this.updateProgress(80);
+    },
+
+    // Save plus-one choice
+    savePlusOne(value) {
+        if (value === 'yes') {
+            document.querySelectorAll('.question-step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step-plusone-name').classList.add('active');
+            document.getElementById('plusone-name').value = '';
+            document.getElementById('plusone-name').focus();
+            this.updateProgress(90);
+        } else {
+            this.currentGuest.plusOne = false;
+            this.finalizeGuest();
+        }
+    },
+
+    // Save plus-one name
+    savePlusOneName(name) {
+        if (name === undefined) {
+            name = document.getElementById('plusone-name').value.trim();
+        }
+
+        if (!name) {
+            // Default to "Guest of [name]"
+            this.currentGuest.plusOne = true;
+            this.currentGuest.plusOneName = `Guest of ${this.currentGuest.name}`;
+        } else {
+            this.currentGuest.plusOne = true;
+            this.currentGuest.plusOneName = name;
+        }
+
+        this.finalizeGuest();
+    },
+
+    // Finalize and save guest
+    finalizeGuest() {
         // Save to storage
         const savedGuest = Storage.addGuest(this.currentGuest);
 
@@ -532,11 +585,16 @@ const App = {
         this.showMilestoneCelebration(count);
 
         // Show summary
-        const summary = `
+        let summary = `
             <strong>${savedGuest.name}</strong><br>
             ${this.formatLabel(savedGuest.relationship)} • ${savedGuest.age}
             ${savedGuest.note ? '<br>' + savedGuest.note : ''}
         `;
+
+        if (savedGuest.plusOne) {
+            summary += `<br><span style="color: var(--primary);">+ ${savedGuest.plusOneName}</span>`;
+        }
+
         document.getElementById('guest-summary').innerHTML = summary;
 
         document.querySelectorAll('.question-step').forEach(s => s.classList.remove('active'));
@@ -962,8 +1020,9 @@ const App = {
             const attendProb = this.getAttendanceProbability(rating.partner1.attend, rating.partner2.attend);
 
             card.innerHTML = `
-                <div class="guest-card-name">${guest.name}</div>
+                <div class="guest-card-name">${guest.name}${guest.plusOne ? ' + 1' : ''}</div>
                 <div class="guest-card-detail">${this.formatLabel(guest.relationship)} • ${guest.age}</div>
+                ${guest.plusOne ? `<div class="guest-card-detail" style="color: var(--primary);">+ ${guest.plusOneName}</div>` : ''}
                 ${guest.note ? `<div class="guest-card-detail" style="font-style: italic;">${guest.note}</div>` : ''}
                 <div class="guest-card-ratings">
                     <div class="rating-row">
@@ -1014,11 +1073,21 @@ const App = {
         const expectedAttendance = invitedGuests.reduce((sum, guest) => {
             const r = ratings[guest.id];
             const prob = this.getAttendanceProbability(r.partner1.attend, r.partner2.attend);
-            return sum + (prob / 100);
+            let guestCount = prob / 100;
+            // Add plus-one if they have one (assume same attendance probability)
+            if (guest.plusOne) {
+                guestCount += prob / 100;
+            }
+            return sum + guestCount;
+        }, 0);
+
+        // Count total including plus-ones
+        const totalWithPlusOnes = invitedGuests.reduce((sum, guest) => {
+            return sum + 1 + (guest.plusOne ? 1 : 0);
         }, 0);
 
         // Update budget display
-        document.getElementById('current-guests').textContent = invitedGuests.length;
+        document.getElementById('current-guests').textContent = totalWithPlusOnes;
         document.getElementById('expected-attendance').textContent = Math.round(expectedAttendance);
         document.getElementById('floor-value').textContent = this.setup.floor;
         document.getElementById('middle-value').textContent = this.setup.middle;
