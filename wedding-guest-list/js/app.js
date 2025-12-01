@@ -92,6 +92,7 @@ const App = {
         document.getElementById('view-progress').addEventListener('click', () => this.showProgress());
 
         // Brain Dump
+        document.getElementById('bulk-import-button').addEventListener('click', () => this.showBulkImport());
         document.getElementById('name-next').addEventListener('click', () => this.saveName());
         document.getElementById('guest-name').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.saveName();
@@ -148,6 +149,10 @@ const App = {
         // Dashboard
         document.getElementById('back-to-reveal').addEventListener('click', () => this.showReveal());
         document.getElementById('start-over').addEventListener('click', () => this.startOver());
+
+        // Bulk Import
+        document.getElementById('bulk-import-process').addEventListener('click', () => this.processBulkImport());
+        document.getElementById('bulk-import-cancel').addEventListener('click', () => this.closeBulkImport());
     },
 
     // Show a specific screen
@@ -543,6 +548,130 @@ const App = {
 
         this.showScreen('partner-select');
         this.showProgress();
+    },
+
+    // Show bulk import modal
+    showBulkImport() {
+        document.getElementById('bulk-import-modal').classList.add('active');
+        document.getElementById('bulk-import-text').value = '';
+        document.getElementById('bulk-import-text').focus();
+    },
+
+    // Close bulk import modal
+    closeBulkImport() {
+        document.getElementById('bulk-import-modal').classList.remove('active');
+    },
+
+    // Parse bulk import text
+    parseBulkImport(text) {
+        const lines = text.split('\n').filter(line => line.trim());
+        const guests = [];
+
+        const relationshipMap = {
+            'friend': 'friend',
+            'friends': 'friend',
+            'family': 'family',
+            'coworker': 'coworker',
+            'colleague': 'coworker',
+            'work': 'coworker',
+            'extended family': 'extended-family',
+            'extended': 'extended-family',
+            'cousin': 'extended-family',
+            'aunt': 'extended-family',
+            'uncle': 'extended-family',
+            'parent': 'parents-friend',
+            'parents': 'parents-friend',
+            "parent's friend": 'parents-friend',
+            "parents friend": 'parents-friend'
+        };
+
+        lines.forEach(line => {
+            const parts = line.split(',').map(p => p.trim());
+            const guest = {
+                name: parts[0],
+                relationship: 'friend',
+                age: '30s-40s',
+                note: '',
+                addedBy: this.currentPartner
+            };
+
+            // Try to parse additional fields
+            if (parts.length > 1) {
+                // Check if part 2 is a relationship
+                const rel = parts[1].toLowerCase();
+                const matchedRel = relationshipMap[rel] || Object.keys(relationshipMap).find(key => rel.includes(key));
+                if (matchedRel) {
+                    guest.relationship = relationshipMap[matchedRel];
+                }
+            }
+
+            if (parts.length > 2) {
+                // Check if part 3 is an age range
+                const age = parts[2].trim();
+                if (age.match(/\d+s?-\d+s?/) || age === '50+' || age.includes('20s') || age.includes('30s') || age.includes('40s')) {
+                    guest.age = age;
+                } else {
+                    // Otherwise it's a note
+                    guest.note = parts.slice(2).join(', ');
+                }
+            }
+
+            if (parts.length > 3) {
+                // Part 4 and beyond are notes
+                guest.note = parts.slice(3).join(', ');
+            }
+
+            guests.push(guest);
+        });
+
+        return guests;
+    },
+
+    // Process bulk import
+    processBulkImport() {
+        const text = document.getElementById('bulk-import-text').value;
+        if (!text.trim()) {
+            alert('Please paste your guest list first!');
+            return;
+        }
+
+        const guests = this.parseBulkImport(text);
+
+        if (guests.length === 0) {
+            alert('No valid guests found. Please check your format.');
+            return;
+        }
+
+        // Add all guests
+        guests.forEach(guest => {
+            Storage.addGuest(guest);
+        });
+
+        // Close modal
+        this.closeBulkImport();
+
+        // Show celebration!
+        this.createConfetti();
+        setTimeout(() => this.createConfetti(), 200);
+        setTimeout(() => this.createConfetti(), 400);
+
+        // Show success popup
+        const popup = document.createElement('div');
+        popup.className = 'celebration-popup';
+        popup.innerHTML = `
+            <div style="font-size: 4em; margin-bottom: 15px;">🎉</div>
+            <h2>Imported ${guests.length} Guests!</h2>
+            <p>Your list is growing fast!</p>
+        `;
+        document.body.appendChild(popup);
+
+        setTimeout(() => {
+            popup.style.animation = 'popup 0.3s ease-out reverse';
+            setTimeout(() => popup.remove(), 300);
+        }, 2500);
+
+        // Reset to "I'm done" screen
+        this.finishBrainDump();
     },
 
     // Show progress

@@ -128,6 +128,7 @@
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
                 <p class="partner-label" id="current-partner"></p>
+                <button class="secondary-button" id="bulk-import-button" style="margin-bottom: 20px;">📋 Import Existing List</button>
 
                 <!-- Question: Name -->
                 <div class="question-step active" id="step-name">
@@ -307,6 +308,25 @@
                 </div>
 
                 <button class="big-button" id="view-dashboard">View Dashboard 📊</button>
+            </div>
+        </div>
+
+        <!-- Bulk Import Modal -->
+        <div id="bulk-import-modal" class="modal">
+            <div class="modal-content">
+                <h2>📋 Import Your Guest List</h2>
+                <p class="subtitle">Paste your list below - one guest per line</p>
+                <p style="font-size: 0.9em; color: var(--gray); margin-bottom: 15px;">
+                    Format: Name (or Name, Relationship, Age Range, Notes)<br>
+                    Example: John Smith, friend, 30s-40s, college buddy
+                </p>
+                <textarea id="bulk-import-text" placeholder="John Smith&#10;Jane Doe, family, 50+&#10;Bob Johnson, coworker, 20s-30s, works in IT" class="text-input" style="min-height: 200px;"></textarea>
+                <button class="big-button" id="bulk-import-process">Import Guests 🎉</button>
+                <button class="secondary-button" id="bulk-import-cancel">Cancel</button>
+                <div id="bulk-import-preview" style="margin-top: 20px; display: none;">
+                    <h3>Preview:</h3>
+                    <div id="bulk-import-preview-list"></div>
+                </div>
             </div>
         </div>
 
